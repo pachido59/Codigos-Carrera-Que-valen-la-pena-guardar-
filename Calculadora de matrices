@@ -1,0 +1,287 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+
+// Función para leer una matriz de un archivo CSV
+double** leerMatrizDesdeCSV(const std::string& archivo, int& tamano);
+
+// Función para liberar la memoria de una matriz
+void liberarMatriz(double** matriz, int tamano);
+
+// Función para imprimir una matriz
+void imprimirMatriz(double** matriz, int tamano);
+
+// Funciones para operaciones entre matrices
+double** sumaMatrices(double** matrizA, double** matrizB, int tamano);
+double** restaMatrices(double** matrizA, double** matrizB, int tamano);
+double** multiplicaMatrices(double** matrizA, double** matrizB, int tamano);
+double** multiplicaMatricesEscalar(double** matrizA, double** matrizB, int tamano,int escalar);
+
+
+// Función para calcular la determinante de una matriz
+double calcularDeterminante(double** matriz, int tamano);
+
+int main() {
+    int de_nuevo = 1; // Inicializar de_nuevo
+    double** matrizA = nullptr;
+    double** matrizB = nullptr;
+    double** suma = nullptr;
+    double** resta = nullptr;
+    double** producto = nullptr;
+    int tamano;
+
+    do {
+        int opcion;
+        system("cls");
+        std::cout << "Calculadora de matrices\nSeleccione una opcion\n";
+        std::cout << "1- Declarar matrices\n";
+        std::cout << "2- Sumar Matrices\n";
+        std::cout << "3- Restar Matrices\n";
+        std::cout << "4- Multiplicar matrices\n";
+        std::cout << "5- Determinante de matriz\n";
+        std::cin >> opcion;
+
+        switch (opcion) {
+        case 1: {
+        int opcioncase1;
+
+        std::cout << "Seleccione una forma de añadir los datos\n";
+        std::cout << "1- Manual\n";
+        std::cout << "2- Desde un archivo csv\n";
+        std::cin >> opcioncase1;
+
+        if (opcioncase1 == 1) {
+        std::cout << "Ingrese el tamaño de la matriz cuadrada: ";
+        std::cin >> tamano;
+
+        if (tamano == 0) {
+        std::cout << "Error, ingrese un valor valido\n";
+        return 1;
+        } 
+        else {
+        std::cout << "Ingrese los elementos de la matriz A: " << std::endl;
+        matrizA = new double*[tamano];
+            for(int i = 0; i < tamano; i++) {
+            matrizA[i] = new double[tamano];
+                for (int j = 0; j < tamano; j++) {
+                        std::cin >> matrizA[i][j];
+                            }
+                        }
+
+        std::cout << "Ingrese los elementos de la matriz B: " << std::endl;
+        matrizB = new double*[tamano];
+            for (int i = 0; i < tamano; i++) {
+                matrizB[i] = new double[tamano];
+                    for (int j = 0; j < tamano; j++) {
+                        std::cin >> matrizB[i][j];
+                            }
+                        }
+
+                std::cout << "Matriz A:" << std::endl;
+                imprimirMatriz(matrizA, tamano);
+                std::cout << "Matriz B:" << std::endl;
+                imprimirMatriz(matrizB, tamano);
+                    }
+                } 
+                else {
+                    std::string archivoA, archivoB;
+                    std::cout << "Ingrese el nombre del archivo CSV para la matriz A: ";
+                    std::cin >> archivoA;
+                    matrizA = leerMatrizDesdeCSV(archivoA, tamano);
+
+                    std::cout << "Ingrese el nombre del archivo CSV para la matriz B: ";
+                    std::cin >> archivoB;
+                    matrizB = leerMatrizDesdeCSV(archivoB, tamano);
+                }
+                break;
+            }
+            case 2:
+                suma = sumaMatrices(matrizA, matrizB, tamano);
+                std::cout << "Suma de matrices:" << std::endl;
+                imprimirMatriz(suma, tamano);
+                break;
+            case 3:
+                resta = restaMatrices(matrizA, matrizB, tamano);
+                std::cout << "Resta de matrices:" << std::endl;
+                imprimirMatriz(resta, tamano);
+                break;
+            case 4:{
+                int opcioncase4;
+                std::cout << "Ingrese la operacion a usar:\n";
+                std::cout <<"1- Escalar\n";
+                std::cout <<"2- Por una matriz\n";
+                std::cin >>opcioncase4;
+
+            if(opcioncase4==1){
+                int escalar;
+                std::cout << "Ingrese el escalar\n";
+                std::cin >>escalar;
+                producto = multiplicaMatricesEscalar(matrizA,matrizB,tamano,escalar);
+                imprimirMatriz(producto,tamano);
+            }
+            else{
+                producto = multiplicaMatrices(matrizA, matrizB, tamano);
+                std::cout << "Multiplicación de matrices:" << std::endl;
+                imprimirMatriz(producto, tamano);
+            
+            }
+            }
+            break;
+            case 5: {
+                int opcioncase5;
+                std::cout << "Seleccione la determinante de la matriz que desea\n";
+                std::cout << "1- Matriz A\n";
+                std::cout << "2- Matriz B\n";
+                std::cin >> opcioncase5;
+
+                if (opcioncase5 == 1) {
+                    std::cout << "Determinante de la matriz A: " << calcularDeterminante(matrizA, tamano) << std::endl;
+                }
+                if (opcioncase5 == 2) {
+                    std::cout << "Determinante de la matriz B: " << calcularDeterminante(matrizB, tamano) << std::endl;
+                }
+                break;
+            }
+            default:
+                std::cout << "Seleccione otra opción\n";
+                break;
+        }
+
+        std::cout << "¿Desea regresar al menu principal?\n";
+        std::cout << "1- Si\n";
+        std::cout << "2- No\n";
+        std::cin >> de_nuevo;
+    } while (de_nuevo == 1);
+
+    liberarMatriz(matrizA, tamano);
+    liberarMatriz(matrizB, tamano);
+    liberarMatriz(suma, tamano);
+    liberarMatriz(resta, tamano);
+    liberarMatriz(producto, tamano);
+
+    return 0;
+}
+
+double** leerMatrizDesdeCSV(const std::string& archivo, int& tamano) {
+    std::ifstream file(archivo);
+    std::string linea;
+    getline(file, linea);
+    std::stringstream ss(linea);
+    std::string valor;
+    tamano = 0;
+    while (getline(ss, valor, ',')) {
+        tamano++;
+    }
+    double** matriz = new double*[tamano];
+    for (int i = 0; i < tamano; i++) {
+        matriz[i] = new double[tamano];
+    }
+    int fila = 0;
+    file.clear();
+    file.seekg(0, std::ios::beg);
+    while (getline(file, linea)) {
+        std::stringstream ss(linea);
+        int columna = 0;
+        while (getline(ss, valor, ',')) {
+            matriz[fila][columna] = std::stod(valor);
+            columna++;
+        }
+        fila++;
+    }
+    file.close();
+    return matriz;
+}
+
+void liberarMatriz(double** matriz, int tamano) {
+    for (int i = 0; i < tamano; i++) {
+        delete[] matriz[i];
+    }
+    delete[] matriz;
+}
+
+void imprimirMatriz(double** matriz, int tamano) {
+    for (int i = 0; i < tamano; i++) {
+        for (int j = 0; j < tamano; j++) {
+            std::cout << matriz[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+double** sumaMatrices(double** matrizA, double** matrizB, int tamano) {
+    double** resultado = new double*[tamano];
+    for (int i = 0; i < tamano; i++) {
+        resultado[i] = new double[tamano];
+        for (int j = 0; j < tamano; j++) {
+            resultado[i][j] = matrizA[i][j] + matrizB[i][j];
+        }
+    }
+    return resultado;
+}
+
+double** restaMatrices(double** matrizA, double** matrizB, int tamano) {
+    double** resultado = new double*[tamano];
+    for (int i = 0; i < tamano; i++) {
+        resultado[i] = new double[tamano];
+        for (int j = 0; j < tamano; j++) {
+            resultado[i][j] = matrizA[i][j] - matrizB[i][j];
+        }
+    }
+    return resultado;
+}
+
+double** multiplicaMatrices(double** matrizA, double** matrizB, int tamano) {
+    double** resultado = new double*[tamano];
+    for (int i = 0; i < tamano; i++) {
+        resultado[i] = new double[tamano];
+        for (int j = 0; j < tamano; j++) {
+            resultado[i][j] = 0;
+            for (int k = 0; k < tamano; k++) {
+                resultado[i][j] += matrizA[i][k] * matrizB[k][j];
+            }
+        }
+    }
+    return resultado;
+}
+double** multiplicaMatricesEscalar(double** matrizA, double** matrizB, int tamano, int escalar) {
+    double** resultado = new double*[tamano];
+    for (int i = 0; i < tamano; i++) {
+        resultado[i] = new double[tamano];
+        for (int j = 0; j < tamano; j++) {
+            resultado[i][j] = matrizA[i][j]*escalar;
+            
+        }
+    }
+    return resultado;
+}
+double calcularDeterminante(double** matriz, int tamano) {
+    if (tamano == 1) {
+        return matriz[0][0];
+    }
+    double determinante = 0;
+    double** submatriz = new double*[tamano - 1];
+    for (int i = 0; i < tamano - 1; i++) {
+        submatriz[i] = new double[tamano - 1];
+    }
+    int signo = 1;
+    for (int i = 0; i < tamano; i++) {
+        int subi = 0;
+        for (int j = 1; j < tamano; j++) {
+            int subj = 0;
+            for (int k = 0; k < tamano; k++) {
+                if (k == i) continue;
+                submatriz[subi][subj] = matriz[j][k];
+                subj++;
+            }
+            subi++;
+        }
+        determinante += signo * matriz[0][i] * calcularDeterminante(submatriz, tamano - 1);
+        signo = -signo;
+    }
+    for (int i = 0; i < tamano - 1; i++) {
+        delete[] submatriz[i];
+    }
+    delete[] submatriz;
+    return determinante;
+}
